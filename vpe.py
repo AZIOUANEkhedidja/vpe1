@@ -110,6 +110,19 @@ class Camera:
         ray = np.array([ndc[0], ndc[1], -self.f])
         ray = ray / np.linalg.norm(ray)
         return self.position, ray
+class Plane:
+    def __init__(self, point, normal, color=(100, 100, 100)):
+        self.point = np.array(point)  
+        self.normal = np.array(normal) / np.linalg.norm(normal)  
+        self.color = color  
+
+    def intersect(self, ray_origin, ray_direction):
+        denom = np.dot(self.normal, ray_direction)
+        if abs(denom) > 1e-6:  
+            t = np.dot(self.point - ray_origin, self.normal) / denom
+            if t > 0:  
+                return t
+        return None
 
 obj_sphere = OBJLoader("sphere.obj")
 camira = Camera([0, 0, 200], w, h, focal_length)
@@ -124,6 +137,7 @@ def compute_lambertian_lighting(normal, light_pos, point):
     gradient_intensity = np.clip(gradient_intensity, 0, 1)
     return gradient_intensity
 
+floor = Plane(point=[0, -50, 0], normal=[0, 1, 0], color=(50, 50, 50))
 running = True
 done = False
 while running:
@@ -144,7 +158,12 @@ while running:
                     gray_value = int(intensity * 255)
                     color = (gray_value, gray_value, gray_value)
                 else:
-                    color = (111,111,111)
+                    t_floor = floor.intersect(ray_origin, ray_direction)
+                    if t_floor is not None:
+                        point = ray_origin + t_floor * ray_direction
+                        color = floor.color  
+                    else:
+                        color = (111,111,111)
                 screen.set_at((y,x), color)
                 pygame.display.update()
         done = True
