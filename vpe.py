@@ -128,14 +128,24 @@ obj_sphere = OBJLoader("sphere.obj")
 camira = Camera([0, 0, 200], w, h, focal_length)
 sphere = Sphere(screen,obj_sphere.vertices,create_edges_from_faces(obj_sphere.faces),obj_sphere.faces , camira.position,50)
 
-def compute_lambertian_lighting(normal, light_pos, point):
+def compute_lambertian_lighting(normal, light_pos, point, sphere=None):
     light_dir = light_pos - point
     light_dir = light_dir / np.linalg.norm(light_dir)
+    shadow_ray_origin = point + normal * 0.001
+    shadow_ray_direction = light_pos - shadow_ray_origin
+    shadow_ray_direction = shadow_ray_direction / np.linalg.norm(shadow_ray_direction)
+    shadow_t = sphere.intersect(shadow_ray_origin, shadow_ray_direction) if sphere else None
+    shadow = False
+    if shadow_t is not None and shadow_t > 0:
+        shadow = True  
     angle = np.dot(normal, light_dir)
     angle = max(0, angle)  
-    gradient_intensity = ambient_intensity + (angle * light_intensity)
-    gradient_intensity = np.clip(gradient_intensity, 0, 1)
-    return gradient_intensity
+    if shadow:
+        intensity = ambient_intensity
+    else:
+        intensity = ambient_intensity + (angle * light_intensity)
+    intensity = np.clip(intensity, 0, 1)
+    return intensity
 
 floor = Plane(point=[0, -50, 0], normal=[0, 1, 0], color=(50, 50, 50))
 running = True
