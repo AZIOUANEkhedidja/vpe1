@@ -1,6 +1,6 @@
 
 class OBJLoader:
-    def __init__(self, filename,z=1):
+    def __init__(self, filename,z=60):
         self.vertices = []  
         self.groups = []    
         self.faces = []     
