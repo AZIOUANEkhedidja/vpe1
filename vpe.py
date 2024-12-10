@@ -2,15 +2,15 @@ import pygame
 import numpy as np
 from read_file import *
 pygame.init()
-w = 200
-h = 200
+w = 600
+h = 600
 screen = pygame.display.set_mode((w,h))
 pygame.display.set_caption("VPE")
-focal_length = 10
+focal_length = 1
 bg_color = (0, 0, 0)
-light_position = np.array([-100,50,50])  
+light_position = np.array([-200,300,100])  
 light_intensity = 1.0  
-ambient_intensity = 0.3 
+ambient_intensity = 0.1
 class Object3d:
     def __init__(self,surface: pygame.Surface,
                 vertices,
@@ -175,8 +175,8 @@ while running:
                     point = ray_origin + t * ray_direction
                     normal = point - sphere.center
                     normal = normal / np.linalg.norm(normal)
-                    intensity = compute_lambertian_lighting(normal, light_position, point)
-                    gray_value = int(intensity * 255)
+                    intensity = compute_lambertian_lighting(normal, light_position, point, sphere)
+                    gray_value = int(intensity * 200+55)
                     color = (gray_value, gray_value, gray_value)
                 else:
                     t_floor = floor.intersect(ray_origin, ray_direction)
@@ -186,7 +186,7 @@ while running:
                     else:
                         color = (111,111,111)
                 screen.set_at((y,x), color)
-                pygame.display.update()
+            pygame.display.update()
         done = True
 
 exit()
