@@ -146,6 +146,17 @@ def compute_lambertian_lighting(normal, light_pos, point, sphere=None):
         intensity = ambient_intensity + (angle * light_intensity)
     intensity = np.clip(intensity, 0, 1)
     return intensity
+def compute_shadow_position_and_size(sphere_position, sphere_radius, light_pos, floor_y, shadow_scale=0.5):
+    light_dir = light_pos - sphere_position
+    light_dir = light_dir / np.linalg.norm(light_dir)
+    t = (floor_y - sphere_position[1]) / light_dir[1]
+    shadow_pos = sphere_position + t * light_dir
+    distance_to_light = np.linalg.norm(light_pos - sphere_position)
+    shadow_radius = sphere_radius * (distance_to_light / abs(light_pos[1] - floor_y)) * shadow_scale  # إضافة shadow_scale لتقليص الحجم
+    return shadow_pos, shadow_radius
+
+def draw_shadow(shadow_pos, shadow_radius):
+    pygame.draw.circle(screen, (0, 0, 0), (int(shadow_pos[0]), int(shadow_pos[2])), int(shadow_radius))
 
 floor = Plane(point=[0, -50, 0], normal=[0, 1, 0], color=(50, 50, 50))
 running = True
