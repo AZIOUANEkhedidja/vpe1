@@ -91,7 +91,15 @@ class Sphere(Object3d):
         else:
             t1 = (-b - np.sqrt(delta)) / (2*a)
             t2 = (-b + np.sqrt(delta)) / (2*a)
-            return min(t for t in [t1, t2] if t > 0)
+            positivets = []
+            if t1 > 0:
+                positivets.append(t1)
+            if t2 > 0:
+                positivets.append(t2)
+            if positivets:
+                return min(positivets)
+
+            return None
 class Camera:
     def __init__(self, position, w, h, f) -> None:
         self.position = position
@@ -146,7 +154,8 @@ def compute_lambertian_lighting(normal, light_pos, point, sphere=None):
         intensity = ambient_intensity + (angle * light_intensity)
     intensity = np.clip(intensity, 0, 1)
     return intensity
-def compute_shadow_position_and_size(sphere_position, sphere_radius, light_pos, floor_y, shadow_scale=0.5):
+
+def compute_shadow_position_and_size(sphere_position, sphere_radius, light_pos, floor_y, shadow_scale=1):
     light_dir = light_pos - sphere_position
     light_dir = light_dir / np.linalg.norm(light_dir)
     t = (floor_y - sphere_position[1]) / light_dir[1]
@@ -156,7 +165,7 @@ def compute_shadow_position_and_size(sphere_position, sphere_radius, light_pos, 
     return shadow_pos, shadow_radius
 
 def draw_shadow(shadow_pos, shadow_radius):
-    pygame.draw.circle(screen, (0, 0, 0), (int(shadow_pos[0]), int(shadow_pos[2])), int(shadow_radius))
+    pygame.draw.circle(screen, (10,10,10), (int(shadow_pos[0]), int(shadow_pos[2])), int(shadow_radius))
 
 floor = Plane(point=[0, -50, 0], normal=[0, 1, 0], color=(50, 50, 50))
 running = True
@@ -169,7 +178,7 @@ while running:
     while not done:
         for x in range(h):
             for y in range(w):
-                ray_origin, ray_direction = camira.get_ray(y,x)
+                ray_origin, ray_direction = camira.get_ray(y, x)
                 t = sphere.intersect(ray_origin, ray_direction)
                 if t is not None:
                     point = ray_origin + t * ray_direction
@@ -182,11 +191,16 @@ while running:
                     t_floor = floor.intersect(ray_origin, ray_direction)
                     if t_floor is not None:
                         point = ray_origin + t_floor * ray_direction
-                        color = floor.color  
+                        normal = np.array([0, 1, 0])
+                        intensity = compute_lambertian_lighting(normal, light_position, point, sphere)
+                        gray_value = int(intensity * 255)
+                        color = (gray_value, gray_value, gray_value)
                     else:
                         color = (111,111,111)
                 screen.set_at((y,x), color)
             pygame.display.update()
+        shadow_pos, shadow_radius = compute_shadow_position_and_size(sphere.center, sphere.radius, light_position, floor.point[1])
+        draw_shadow(shadow_pos, shadow_radius)
         done = True
 
 exit()
